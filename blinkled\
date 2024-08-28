@@ -1,64 +1,68 @@
 // Pin Definitions
-const int ledPin = 13;    // Built-in LED on the Arduino Nano 33 IoT
-const int buttonPin = 2;  // Pin for the push button
+const int ledPin = LED_BUILTIN;  // Built-in LED
+const int buttonPin = 2;         // Push button connected to pin 2
 
-// Morse Code for each letter in "Deepanshu"
-String nameMorseCode[] = {
-  "-..",    // D
-  ".",      // E
-  ".",      // E
-  ".--.",   // P
-  ".-",     // A
-  "-.",     // N
-  "...",    // S
-  "....",   // H
-  "..-"     // U
-};
+// Morse code timing
+const int dotDuration = 200;     // Duration of a dot
+const int dashDuration = dotDuration * 3; // Duration of a dash
+const int letterSpace = dotDuration * 3;  // Space between letters
+const int wordSpace = dotDuration * 7;    // Space between words
 
-int nameLength = sizeof(nameMorseCode) / sizeof(nameMorseCode[0]);  // Calculate the number of letters
+// Morse code for "Deepanshu"
+String morseCode = "-.. . . .--. .- -. ... .... ..-";  // Morse code for Deepanshu
+String name = "Deepanshu"; // Name in alphabetic form
+
+bool buttonState = LOW;
+bool lastButtonState = LOW;
 
 void setup() {
-  pinMode(ledPin, OUTPUT);      // Set LED pin as output
-  pinMode(buttonPin, INPUT_PULLDOWN);  // Set button pin as input with internal pull-down resistor
-  Serial.begin(9600);           // Initialize serial communication for debugging (optional)
+  pinMode(ledPin, OUTPUT);        // Initialize the LED pin as an output
+  pinMode(buttonPin, INPUT_PULLUP); // Initialize the button pin as an input with pull-up resistor
+  Serial.begin(9600);             // Start the serial communication
 }
 
 void loop() {
-  // Check if the button is pressed
-  if (digitalRead(buttonPin) == HIGH) {
-    delay(50);  // Debounce delay to avoid multiple triggers
-    blinkMorseCode();  // Call function to blink the name in Morse code
-  }
-}
-
-void blinkMorseCode() {
-  // Loop through each letter in the name
-  for (int i = 0; i < nameLength; i++) {
-    String morseChar = nameMorseCode[i];  // Get the Morse code for the current letter
+  buttonState = digitalRead(buttonPin);
+  
+  if (buttonState == LOW && lastButtonState == HIGH) {
+    // Print name in alphabetic form
+    Serial.print("Name: ");
+    Serial.println(name);
     
-    // Loop through each symbol (dot or dash) in the letter
-    for (int j = 0; j < morseChar.length(); j++) {
-      if (morseChar[j] == '.') {
-        blinkDot();  // Blink a dot
-      } else if (morseChar[j] == '-') {
-        blinkDash(); // Blink a dash
+    // Print name in Morse code
+    Serial.print("Morse Code: ");
+    Serial.println(morseCode);
+    
+    // Blink Morse code
+    for (int i = 0; i < morseCode.length(); i++) {
+      if (morseCode[i] == '.') {
+        blinkDot();
+      } else if (morseCode[i] == '-') {
+        blinkDash();
+      } else if (morseCode[i] == ' ') {
+        delay(letterSpace);
       }
-      delay(500);  // Wait between symbols in the same letter
-    }
-    delay(600);  // Wait between letters
-  }
-  delay(5000);  // Wait before repeating the sequence or ending
-}
 
+      // Check if the button is pressed again to reset
+      if (digitalRead(buttonPin) == LOW) {
+        i = -1; // Reset the loop index to start from the beginning
+      }
+    }
+  }
+
+  lastButtonState = buttonState;
+}
 
 void blinkDot() {
-  digitalWrite(ledPin, HIGH);  // Turn the LED on
-  delay(200);          // Wait for the duration of a dot
-  digitalWrite(ledPin, LOW);   // Turn the LED off
+  digitalWrite(ledPin, HIGH);
+  delay(dotDuration);
+  digitalWrite(ledPin, LOW);
+  delay(dotDuration);
 }
 
 void blinkDash() {
-  digitalWrite(ledPin, HIGH);  // Turn the LED on
-  delay(600);         // Wait for the duration of a dash
-  digitalWrite(ledPin, LOW);   // Turn the LED off
+  digitalWrite(ledPin, HIGH);
+  delay(dashDuration);
+  digitalWrite(ledPin, LOW);
+  delay(dotDuration);
 }
